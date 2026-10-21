@@ -552,6 +552,28 @@ abstract class AbstractPropertyAccessorTests {
 	}
 
 	@Test
+	void setIndexedPropertyWithNonNumericIndex() {
+		AbstractPropertyAccessor accessor = createAccessor(new IndexedTestBean());
+
+		assertThatExceptionOfType(InvalidPropertyException.class)
+				.isThrownBy(() -> accessor.setPropertyValue("array[abc]", new TestBean()))
+				.withMessageContaining("Invalid index in property path 'array[abc]'");
+		assertThatExceptionOfType(InvalidPropertyException.class)
+				.isThrownBy(() -> accessor.setPropertyValue("list[abc]", new TestBean()))
+				.withMessageContaining("Invalid index in property path 'list[abc]'");
+	}
+
+	@Test
+	void setListElementWithNegativeIndexAndExtractOldValueForEditor() {
+		AbstractPropertyAccessor accessor = createAccessor(new IndexedTestBean());
+		accessor.setExtractOldValueForEditor(true);
+
+		assertThatExceptionOfType(InvalidPropertyException.class)
+				.isThrownBy(() -> accessor.setPropertyValue("list[-1]", new TestBean()))
+				.withMessageContaining("Invalid list index in property path 'list[-1]'");
+	}
+
+	@Test
 	void setIndexedPropertyIgnored() {
 		MutablePropertyValues values = new MutablePropertyValues();
 		values.add("toBeIgnored[0]", 42);

@@ -267,6 +267,16 @@ public abstract class AbstractNestablePropertyAccessor extends AbstractPropertyA
 		}
 	}
 
+	private int parseIndex(String key, String canonicalName) {
+		try {
+			return Integer.parseInt(key);
+		}
+		catch (NumberFormatException ex) {
+			throw new InvalidPropertyException(getRootClass(), this.nestedPath + canonicalName,
+					"Invalid index in property path '" + canonicalName + "'", ex);
+		}
+	}
+
 	@SuppressWarnings({"rawtypes", "unchecked"})
 	private void processKeyedProperty(PropertyPath.Segment segment, PropertyValue pv) {
 		Object propValue = getPropertyHoldingValue(segment);
@@ -281,7 +291,7 @@ public abstract class AbstractNestablePropertyAccessor extends AbstractPropertyA
 
 		if (propValue.getClass().isArray()) {
 			Class<?> componentType = propValue.getClass().componentType();
-			int arrayIndex = Integer.parseInt(lastKey);
+			int arrayIndex = parseIndex(lastKey, canonicalName);
 			Object oldValue = null;
 			try {
 				if (isExtractOldValueForEditor() && arrayIndex < Array.getLength(propValue)) {
@@ -307,9 +317,9 @@ public abstract class AbstractNestablePropertyAccessor extends AbstractPropertyA
 
 		else if (propValue instanceof List list) {
 			TypeDescriptor requiredType = ph.getCollectionType(keys.size());
-			int index = Integer.parseInt(lastKey);
+			int index = parseIndex(lastKey, canonicalName);
 			Object oldValue = null;
-			if (isExtractOldValueForEditor() && index < list.size()) {
+			if (isExtractOldValueForEditor() && index >= 0 && index < list.size()) {
 				oldValue = list.get(index);
 			}
 			Object convertedValue = convertIfNecessary(canonicalName, oldValue, pv.getValue(),
