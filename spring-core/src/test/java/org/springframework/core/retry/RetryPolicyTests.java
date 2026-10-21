@@ -92,6 +92,20 @@ class RetryPolicyTests {
 	class BuilderTests {
 
 		@Test
+		void builtPolicyIsNotAffectedByLaterBuilderChanges() {
+			var builder = RetryPolicy.builder().includes(IOException.class);
+			var policy = builder.build();
+
+			assertThat(policy.shouldRetry(new IOException())).isTrue();
+			assertThat(policy.shouldRetry(new IllegalStateException())).isFalse();
+
+			builder.includes(IllegalStateException.class).excludes(FileNotFoundException.class);
+
+			assertThat(policy.shouldRetry(new IllegalStateException())).isFalse();
+			assertThat(policy.shouldRetry(new FileNotFoundException())).isTrue();
+		}
+
+		@Test
 		void backOffPlusConflictingConfig() {
 			assertThatIllegalStateException()
 					.isThrownBy(() -> RetryPolicy.builder().backOff(mock()).delay(Duration.ofMillis(10)).build())
